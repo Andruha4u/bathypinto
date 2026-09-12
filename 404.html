@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Page not found — Bathy Pinto</title>
 <meta name="robots" content="noindex">
+<!-- Paths here stay root-relative on purpose. Netlify serves this page at
+     whatever URL was missed, so /old/blog/post would resolve relative paths
+     to /old/blog/assets/… and render it unstyled. index.html uses relative
+     paths instead, so it can be opened straight off disk. -->
 <link rel="icon" href="/assets/img/favicon/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/site.css">
 <script>

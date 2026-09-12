@@ -34,7 +34,9 @@ def candidates(text: str):
                 yield part
 
 
-FILEISH = re.compile(r"\.[A-Za-z0-9]{2,5}$")
+# Long enough for .webmanifest; short enough that prose ending in a word
+# after a period doesn't qualify.
+FILEISH = re.compile(r"\.[A-Za-z0-9]{2,12}$")
 
 
 def is_local(ref: str) -> bool:
