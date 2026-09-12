@@ -11,9 +11,6 @@ site/
 ├── robots.txt
 ├── sitemap.xml
 ├── site.webmanifest
-├── serve.sh              local dev server (wrapper)
-├── dev-server.py         local dev server — stdlib only
-├── check-links.py        verifies every local reference resolves
 └── assets/
     ├── css/site.css
     ├── js/site.js        ~4 KB, vanilla
@@ -24,59 +21,24 @@ site/
 
 ## Running it locally
 
-```bash
-./serve.sh
-```
+Double-click `index.html`, or drag it into a browser. No server, no tooling.
 
-That's the whole setup — Python 3 is already on macOS and Linux, and there is
-nothing to install. It serves the folder at <http://127.0.0.1:8000> and opens a
-browser tab.
+That works because every asset path in `index.html` is **relative**
+(`assets/css/site.css`, not `/assets/css/site.css`), so the browser resolves it
+next to the file instead of at the root of your disk. Keep it that way when you
+add images or sections — a leading slash breaks `file://` loading.
 
-```bash
-./serve.sh --port 8080     # if 8000 is taken
-./serve.sh --no-open       # don't open a browser
-./serve.sh --no-reload     # turn off live reload
-python3 dev-server.py -h   # all flags
-```
+`404.html` is the deliberate exception and keeps its root-relative paths: Netlify
+serves it at whatever URL was missed, so relative paths would resolve against
+`/old/blog/` on a deep 404 and render the page unstyled. There's a comment in the
+file saying so.
 
-The dev server matches how Netlify will serve the site, so what you see locally
-is what deploys:
-
-| It does | Why it matters |
-|---|---|
-| Serves from the site root | The root-relative `/assets/…` paths resolve — they don't over `file://` |
-| Returns `404.html` with a real 404 status | Same as the `netlify.toml` redirect rule |
-| Falls back `/about` → `/about.html` | Netlify's pretty URLs, ready for the v1.1 page |
-| Applies the `netlify.toml` security headers | A CSP mistake shows up here, not in production |
-| Rewrites `example.netlify.app` → `http://127.0.0.1:PORT` | Canonical link, both OG URLs, the JSON-LD `Person`, `robots.txt` and `sitemap.xml` all point at the page you're looking at instead of a domain that doesn't exist yet |
-| Sends `Cache-Control: no-store` | An edit is one refresh away; production caching still comes from `netlify.toml` |
-| Reloads the tab when a file changes | Injected only by the dev server — never in the deployed HTML |
-
-Two things are deliberately *not* mirrored: HSTS (it would pin `localhost` to
-HTTPS in your browser for a year) and the production cache lifetimes.
-
-The origin rewrite reads one constant near the top of `dev-server.py`:
-
-```python
-PROD_ORIGIN = "https://example.netlify.app"
-```
-
-If you run the domain find-and-replace below, update that line to match so the
-rewrite keeps working.
-
-**Checking references**
+If you ever want to see it over HTTP — to check the real 404 status, the
+`netlify.toml` headers, or the webmanifest, none of which `file://` can show you:
 
 ```bash
-python3 check-links.py
+python3 -m http.server 8000    # then open http://localhost:8000
 ```
-
-Walks every `href`, `src`, `srcset` candidate and manifest icon in the HTML and
-the webmanifest, and confirms each local path exists on disk — the
-"zero 404s" checklist item, without a browser. It currently reports
-`38 local references · all resolve`.
-
-Plain `python3 -m http.server` still works if you want it, but you lose the 404
-status, the headers and the origin rewrite.
 
 ---
 
@@ -111,17 +73,12 @@ grep -rl "example.netlify.app" . | xargs sed -i '' "s|example.netlify.app|YOURDO
 grep -rl "example.netlify.app" . | xargs sed -i     "s|example.netlify.app|YOURDOMAIN|g"   # Linux
 ```
 
-That sweep also updates `PROD_ORIGIN` in `dev-server.py`, which is what keeps
-the local origin rewrite working. Re-run `./serve.sh` afterwards and confirm the
-canonical link still points at `127.0.0.1`.
-
 Also uncomment the canonical-host redirect at the bottom of `netlify.toml` so the
 `.netlify.app` URL and your custom domain don't both get indexed.
 
 **Previewing locally**
 
-See *Running it locally* above — `./serve.sh`. Always use a server, never
-`file://`; the root-relative `/assets/…` paths won't resolve otherwise.
+See *Running it locally* above — just open `index.html`.
 
 ---
 
@@ -150,9 +107,6 @@ Fill them from `intro.md` — the placeholder names match.
 | 10 | Testimonials | One `<figure>` per quote — the counter updates itself |
 | 11 | Contact | Email, location, timezone, social links |
 | 12 | Everywhere | `Bathy Pinto` → your exact preferred name |
-
-**Before launch:** delete the `<div class="draft">` banner in `index.html` (and its
-`.draft` rules in `site.css` if you want the file tidy).
 
 Stray file: `assets/cv.pdf.README.txt` was left over from scaffolding — delete it manually,
 it isn't referenced anywhere.

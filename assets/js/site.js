@@ -140,12 +140,4 @@
   /* ---- 6. Odds and ends ------------------------------------------------- */
   var yr = document.getElementById('yr');
   if (yr) yr.textContent = String(new Date().getFullYear());
-
-  var draftX = document.querySelector('[data-dismiss-draft]');
-  if (draftX) {
-    draftX.addEventListener('click', function () {
-      var d = document.getElementById('draft');
-      if (d) d.hidden = true;
-    });
-  }
 })();
